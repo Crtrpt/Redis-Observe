@@ -1,9 +1,42 @@
 libfpconv
 
-----------------------------------------------
+Minimalistic C / D implementation of Fabian Loitsch's Grisu-algorithm [[pdf]](http://florian.loitsch.com/publications/dtoa-pldi2010.pdf).
+Grisu converts floating point numbers to an optimal decimal string representation without loss of precision.
 
-Fast and accurate double to string conversion based on Florian Loitsch's Grisu-algorithm[1].
+### C Api
+```c
+int fpconv_dtoa(double fp, char dest[24]);
+```
+* Writes string representation of ```fp``` to ```dest``` and returns the number of written characters
+* The emitted string will never exceed 24 characters
+* Does not null terminate the string
+* Assumes ```fp``` is an IEEE 64-bit floating point number
 
-This port contains a subset of the 'C' version of Fast and accurate double to string conversion based on Florian Loitsch's Grisu-algorithm available at [github.com/night-shift/fpconv](https://github.com/night-shift/fpconv)).
+### Example usage
+```c
+void print(double d)
+{
+    char buf[24 + 1]; /* reserve space for null terminator */
+    int str_len = fpconv_dtoa(d, buf);
 
-[1] https://www.cs.tufts.edu/~nr/cs257/archive/florian-loitsch/printf.pdf
+    buf[str_len] = '\0';
+    printf("%s", buf);
+}
+```
+
+### Why not just use `snprintf`?
+Convert doubles faster to shortest strings without precision loss.
+
+Average processing time on a mix of "long" and "short" doubles in nanoseconds:
+```
+             short long
+snprintf %g : 515  700
+     %0.18g : 989  1171
+         %f : 737  3047
+fpconv_dtoa : 165  193
+
+snprintf overhead : 71
+```
+Measured with `gcc-4.8 -O3` and `glibc 2.17`.
+
+
