@@ -6959,6 +6959,7 @@ redisTestProc *getTestProcByName(const char *name) {
 }
 #endif
 
+//入口文件
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
@@ -7033,10 +7034,14 @@ int main(int argc, char **argv) {
     char *exec_name = strrchr(argv[0], '/');
     if (exec_name == NULL) exec_name = argv[0];
     server.sentinel_mode = checkForSentinelMode(argc,argv, exec_name);
+    //初始化服务器配置
     initServerConfig();
+    //初始化acl访问控制
     ACLInit(); /* The ACL subsystem must be initialized ASAP because the
                   basic networking code and client creation depends on it. */
+    //初始化模块系统
     moduleInitModulesSystem();
+    //链接类型初始化
     connTypeInitialize();
 
     /* Store the executable path and arguments in a safe place in order
@@ -7049,6 +7054,8 @@ int main(int argc, char **argv) {
     /* We need to init sentinel right now as parsing the configuration file
      * in sentinel mode will have the effect of populating the sentinel
      * data structures with master nodes to monitor. */
+
+    //初始化哨兵模式
     if (server.sentinel_mode) {
         initSentinelConfig();
         initSentinel();
@@ -7180,6 +7187,7 @@ int main(int argc, char **argv) {
     int background = server.daemonize && !server.supervised;
     if (background) daemonize();
 
+    //启动redis
     serverLog(LL_NOTICE, "oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo");
     serverLog(LL_NOTICE,
         "Redis version=%s, bits=%d, commit=%s, modified=%d, pid=%d, just started",
@@ -7194,11 +7202,12 @@ int main(int argc, char **argv) {
     } else {
         serverLog(LL_NOTICE, "Configuration loaded");
     }
-
+    //初始化server
     initServer();
     if (background || server.pidfile) createPidFile();
     if (server.set_proc_title) redisSetProcTitle(NULL);
     redisAsciiArt();
+    //检测 backlog设置
     checkTcpBacklogSettings();
     if (server.cluster_enabled) {
         clusterInit();
@@ -7207,13 +7216,18 @@ int main(int argc, char **argv) {
         moduleInitModulesSystemLast();
         moduleLoadFromQueue();
     }
+    //加载acl
     ACLLoadUsersAtStartup();
+
+    //初始化监听
     initListeners();
     if (server.cluster_enabled) {
         clusterInitListeners();
     }
+    //最后初始化server
     InitServerLast();
 
+    
     if (!server.sentinel_mode) {
         /* Things not needed when running in Sentinel mode. */
         serverLog(LL_NOTICE,"Server initialized");
@@ -7222,6 +7236,7 @@ int main(int argc, char **argv) {
         sds err_msg = NULL;
         if (checkXenClocksource(&err_msg) < 0) {
             serverLog(LL_WARNING, "WARNING %s", err_msg);
+            //事发昂 参数sds
             sdsfree(err_msg);
         }
     #if defined (__arm64__)
@@ -7241,9 +7256,11 @@ int main(int argc, char **argv) {
         }
     #endif /* __arm64__ */
     #endif /* __linux__ */
+        //加载aof
         aofLoadManifestFromDisk();
         loadDataFromDisk();
         aofOpenIfNeededOnServerStart();
+        //删除aof历史文件
         aofDelHistoryFiles();
         if (server.cluster_enabled) {
             serverAssert(verifyClusterConfigWithData() == C_OK);
@@ -7253,7 +7270,7 @@ int main(int argc, char **argv) {
             connListener *listener = &server.listeners[j];
             if (listener->ct == NULL)
                 continue;
-
+            //开始接收客户端请求
             serverLog(LL_NOTICE,"Ready to accept connections %s", listener->ct->get_type(NULL));
         }
 
@@ -7266,6 +7283,7 @@ int main(int argc, char **argv) {
             redisCommunicateSystemd("READY=1\n");
         }
     } else {
+        //哨兵模式
         sentinelIsRunning();
         if (server.supervised_mode == SUPERVISED_SYSTEMD) {
             redisCommunicateSystemd("STATUS=Ready to accept connections\n");
@@ -7277,11 +7295,14 @@ int main(int argc, char **argv) {
     if (server.maxmemory > 0 && server.maxmemory < 1024*1024) {
         serverLog(LL_WARNING,"WARNING: You specified a maxmemory value that is less than 1MB (current value is %llu bytes). Are you sure this is what you really want?", server.maxmemory);
     }
-
+    //设置cpu
     redisSetCpuAffinity(server.server_cpulist);
+    //设置 oom
     setOOMScoreAdj(-1);
 
+    
     aeMain(server.el);
+    //删除事件循环
     aeDeleteEventLoop(server.el);
     return 0;
 }
