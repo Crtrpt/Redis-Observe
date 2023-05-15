@@ -1,0 +1,15 @@
+[submodule "ts"]
+	path = RedisTimeSeries
+	url = git@github.com:RedisTimeSeries/RedisTimeSeries.git
+[submodule "RediSearch"]
+	path = RediSearch
+	url = git@github.com:RediSearch/RediSearch.git
+[submodule "RedisJSON"]
+	path = RedisJSON
+	url = git@github.com:RedisJSON/RedisJSON.git
+[submodule "RedisGraph"]
+	path = RedisGraph
+	url = git@github.com:RedisGraph/RedisGraph.git
+[submodule "redlock"]
+	path = redlock
+	url = git@github.com:wujunwei/redlock.git
