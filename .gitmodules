@@ -13,3 +13,6 @@
 [submodule "redlock"]
 	path = redlock
 	url = git@github.com:wujunwei/redlock.git
+[submodule "grafana-redis-datasource"]
+	path = grafana-redis-datasource
+	url = git@github.com:scarecrowlab/grafana-redis-datasource.git
